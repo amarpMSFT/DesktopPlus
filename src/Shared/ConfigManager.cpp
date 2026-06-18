@@ -193,7 +193,7 @@ void ConfigManager::LoadOverlayProfile(const Ini& config, unsigned int overlay_i
     data.ConfigInt[configid_int_overlay_user_width]                     = config.ReadInt(section.c_str(),    "UserWidth", 1280);
     data.ConfigInt[configid_int_overlay_user_height]                    = config.ReadInt(section.c_str(),    "UserHeight", 720);
     data.ConfigInt[configid_int_overlay_display_mode]                   = config.ReadInt(section.c_str(),    "DisplayMode", ovrl_dispmode_always);
-    data.ConfigInt[configid_int_overlay_origin]                         = GetOverlayOriginFromConfigString(config.ReadString(section.c_str(), "Origin"));
+    data.ConfigInt[configid_int_overlay_origin]                         = GetOverlayOriginFromConfigString(config.ReadString(section.c_str(), "Origin", "Room"));
     data.ConfigBool[configid_bool_overlay_origin_hmd_floor_use_turning] = config.ReadBool(section.c_str(),   "OriginHMDFloorTurning", false);
     data.ConfigInt[configid_int_overlay_origin_smoothing_level]         = config.ReadInt(section.c_str(),    "OriginSmoothingLevel", 0);
     data.ConfigBool[configid_bool_overlay_transform_locked]             = config.ReadBool(section.c_str(),   "TransformLocked", false);
