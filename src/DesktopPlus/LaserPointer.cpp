@@ -1109,8 +1109,8 @@ bool LaserPointer::IntersectionMaskHitTest(OverlayTextureSource texsource, vr::H
     if (texsource == ovrl_texsource_desktop_duplication)
     {
         //Offset by the Desktop Duplication origin since desktop rects are in virtual screen coordinates, which may be negative
-        Vector2Int point(int(uv.v[0] * OutputManager::Get()->GetDesktopWidth()) + OutputManager::Get()->GetDesktopX(),
-                         int((-uv.v[1] + 1.0f) * OutputManager::Get()->GetDesktopHeight()) + OutputManager::Get()->GetDesktopY());
+        Vector2Int point(int(uv.v[0] * OutputManager::Get()->GetDDPDesktopWidth()) + OutputManager::Get()->GetDDPDesktopX(),
+                         int((-uv.v[1] + 1.0f) * OutputManager::Get()->GetDDPDesktopHeight()) + OutputManager::Get()->GetDDPDesktopY());
 
         for (const auto& rect : OutputManager::Get()->GetDesktopRects())
         {

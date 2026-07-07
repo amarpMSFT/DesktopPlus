@@ -47,10 +47,10 @@ OutputManager::OutputManager(HANDLE PauseDuplicationEvent, HANDLE ResumeDuplicat
     m_WindowHandle(nullptr),
     m_PauseDuplicationEvent(PauseDuplicationEvent),
     m_ResumeDuplicationEvent(ResumeDuplicationEvent),
-    m_DesktopX(0),
-    m_DesktopY(0),
-    m_DesktopWidth(-1),
-    m_DesktopHeight(-1),
+    m_DDPDesktopX(0),
+    m_DDPDesktopY(0),
+    m_DDPDesktopWidth(-1),
+    m_DDPDesktopHeight(-1),
     m_MaxActiveRefreshDelay(16),
     m_OutputPendingSkippedFrame(false),
     m_OutputPendingFullRefresh(false),
@@ -263,8 +263,8 @@ DDPDuplReturn OutputManager::InitOutput(HWND Window, INT& SingleOutput, UINT& Ou
     Microsoft::WRL::ComPtr<IDXGIAdapter> adapter_ptr_vr;
 
     std::vector<DPRect> desktop_rects_prev = m_DesktopRects;
-    int desktop_x_prev = m_DesktopX;
-    int desktop_y_prev = m_DesktopY;
+    int desktop_x_prev = m_DDPDesktopX;
+    int desktop_y_prev = m_DDPDesktopY;
 
     EnumerateOutputs(SingleOutput, &adapter_ptr_preferred, &adapter_ptr_vr);
 
@@ -391,8 +391,8 @@ DDPDuplReturn OutputManager::InitOutput(HWND Window, INT& SingleOutput, UINT& Ou
     }
 
     // Set view port
-    m_OvrlTexViewport.Width  = static_cast<FLOAT>(m_DesktopWidth);
-    m_OvrlTexViewport.Height = static_cast<FLOAT>(m_DesktopHeight);
+    m_OvrlTexViewport.Width  = static_cast<FLOAT>(m_DDPDesktopWidth);
+    m_OvrlTexViewport.Height = static_cast<FLOAT>(m_DDPDesktopHeight);
     m_OvrlTexViewport.MinDepth = 0.0f;
     m_OvrlTexViewport.MaxDepth = 1.0f;
     m_OvrlTexViewport.TopLeftX = 0;
@@ -476,7 +476,7 @@ DDPDuplReturn OutputManager::InitOutput(HWND Window, INT& SingleOutput, UINT& Ou
     }
 
     //Set scissor rect to full
-    const D3D11_RECT rect_scissor_full = { 0, 0, m_DesktopWidth, m_DesktopHeight };
+    const D3D11_RECT rect_scissor_full = { 0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight };
     m_DeviceContext->RSSetScissorRects(1, &rect_scissor_full);
 
     // Initialize shaders
@@ -847,7 +847,7 @@ DDPDuplReturnUpdate OutputManager::Update(DDPPtrInfo& PointerInfoDDP,  DPRect& D
     }
     else   //Set dirty & clipping rect to total surface for full refresh
     {
-        DirtyRectTotal = {0, 0, m_DesktopWidth, m_DesktopHeight};
+        DirtyRectTotal = {0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight};
         clipping_region = DirtyRectTotal;
         m_OutputPendingFullRefresh = false;
     }
@@ -861,7 +861,7 @@ DDPDuplReturnUpdate OutputManager::Update(DDPPtrInfo& PointerInfoDDP,  DPRect& D
         m_DeviceContext->RSSetScissorRects(1, &rect_scissor);
 
         //Draw shared surface to overlay texture to avoid trouble with transparency on some systems
-        bool is_full_texture = DirtyRectTotal.Contains({0, 0, m_DesktopWidth, m_DesktopHeight});
+        bool is_full_texture = DirtyRectTotal.Contains({0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight});
         DrawFrameToOverlayTex(is_full_texture);
 
         //Only handle cursor if it's in cropping region
@@ -878,7 +878,7 @@ DDPDuplReturnUpdate OutputManager::Update(DDPPtrInfo& PointerInfoDDP,  DPRect& D
         ret = RefreshOpenVROverlayTexture(DirtyRectTotal);
 
         //Reset scissor rect
-        const D3D11_RECT rect_scissor_full = { 0, 0, m_DesktopWidth, m_DesktopHeight };
+        const D3D11_RECT rect_scissor_full = { 0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight };
         m_DeviceContext->RSSetScissorRects(1, &rect_scissor_full);
 
         has_updated_overlay = (ret == ddp_dupl_return_update_success_refreshed_overlay);
@@ -2248,24 +2248,24 @@ float OutputManager::GetHMDFrameRate() const
     return vr::VRSystem()->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
 }
 
-int OutputManager::GetDesktopWidth() const
+int OutputManager::GetDDPDesktopX() const
 {
-    return m_DesktopWidth;
+    return m_DDPDesktopX;
 }
 
-int OutputManager::GetDesktopHeight() const
+int OutputManager::GetDDPDesktopY() const
 {
-    return m_DesktopHeight;
+    return m_DDPDesktopY;
 }
 
-int OutputManager::GetDesktopX() const
+int OutputManager::GetDDPDesktopWidth() const
 {
-    return m_DesktopX;
+    return m_DDPDesktopWidth;
 }
 
-int OutputManager::GetDesktopY() const
+int OutputManager::GetDDPDesktopHeight() const
 {
-    return m_DesktopY;
+    return m_DDPDesktopHeight;
 }
 
 const std::vector<DPRect>& OutputManager::GetDesktopRects() const
@@ -2801,8 +2801,8 @@ void OutputManager::SetOutputInvalid()
 
     m_OutputInvalid = true;
     SetOutputErrorTexture(m_OvrlHandleDesktopTexture);
-    m_DesktopWidth  = k_lOverlayOutputErrorTextureWidth;
-    m_DesktopHeight = k_lOverlayOutputErrorTextureHeight;
+    m_DDPDesktopWidth  = k_lOverlayOutputErrorTextureWidth;
+    m_DDPDesktopHeight = k_lOverlayOutputErrorTextureHeight;
 
     ResetOverlays();
 }
@@ -3159,8 +3159,8 @@ void OutputManager::CropToDisplay(int display_id, int& crop_x, int& crop_y, int&
         crop_height = rect.GetHeight();
 
         //Offset by desktop coordinates
-        crop_x      -= m_DesktopX;
-        crop_y      -= m_DesktopY;
+        crop_x      -= m_DDPDesktopX;
+        crop_y      -= m_DDPDesktopY;
     }
     else //Full desktop
     {
@@ -3184,8 +3184,8 @@ bool OutputManager::CropToActiveWindow(int& crop_x, int& crop_y, int& crop_width
         {
             DPRect crop_rect(window_rect.left, window_rect.top, window_rect.right, window_rect.bottom);
 
-            crop_rect.Translate({-m_DesktopX, -m_DesktopY});                    //Translate crop rect by desktop offset to get desktop-local coordinates
-            crop_rect.ClipWithFull({0, 0, m_DesktopWidth, m_DesktopHeight});    //Clip to available desktop space
+            crop_rect.Translate({-m_DDPDesktopX, -m_DDPDesktopY});                    //Translate crop rect by desktop offset to get desktop-local coordinates
+            crop_rect.ClipWithFull({0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight});    //Clip to available desktop space
 
             if ((crop_rect.GetWidth() > 0) && (crop_rect.GetHeight() > 0))
             {
@@ -3209,7 +3209,7 @@ void OutputManager::ConvertOUtoSBS(Overlay& overlay, OUtoSBSConverter& converter
     const DPRect& crop_rect = overlay.GetValidatedCropRect();
 
     HRESULT hr = converter.Convert(m_Device.Get(), m_DeviceContext.Get(), m_MultiGPUTargetDevice.Get(), m_MultiGPUTargetDeviceContext.Get(), GetOverlayTexture(),
-                                   m_DesktopWidth, m_DesktopHeight, crop_rect.GetTL().x, crop_rect.GetTL().y, crop_rect.GetWidth(), crop_rect.GetHeight());
+                                   m_DDPDesktopWidth, m_DDPDesktopHeight, crop_rect.GetTL().x, crop_rect.GetTL().y, crop_rect.GetWidth(), crop_rect.GetHeight());
 
     if (hr == S_OK)
     {
@@ -3782,10 +3782,10 @@ DDPDuplReturn OutputManager::CreateTextures(INT SingleOutput, UINT& OutCount, RE
     //Output doesn't exist. This will result in a soft-error invalid output state (system may be in an transition state, in which case we'll automatically recover)
     if (SingleOutput >= desktop_count) 
     {
-        m_DesktopX      = 0;
-        m_DesktopY      = 0;
-        m_DesktopWidth  = -1;
-        m_DesktopHeight = -1;
+        m_DDPDesktopX      = 0;
+        m_DDPDesktopY      = 0;
+        m_DDPDesktopWidth  = -1;
+        m_DDPDesktopHeight = -1;
 
         return ddp_dupl_return_error_expected;
     }
@@ -3838,10 +3838,10 @@ DDPDuplReturn OutputManager::CreateTextures(INT SingleOutput, UINT& OutCount, RE
     }
 
     //Store size and position
-    m_DesktopX      = output_rect_total.GetTL().x;
-    m_DesktopY      = output_rect_total.GetTL().y;
-    m_DesktopWidth  = output_rect_total.GetWidth();
-    m_DesktopHeight = output_rect_total.GetHeight();
+    m_DDPDesktopX      = output_rect_total.GetTL().x;
+    m_DDPDesktopY      = output_rect_total.GetTL().y;
+    m_DDPDesktopWidth  = output_rect_total.GetWidth();
+    m_DDPDesktopHeight = output_rect_total.GetHeight();
 
     DeskBounds.left   = output_rect_total.GetTL().x;
     DeskBounds.top    = output_rect_total.GetTL().y;
@@ -3850,15 +3850,15 @@ DDPDuplReturn OutputManager::CreateTextures(INT SingleOutput, UINT& OutCount, RE
 
     //Set it as mouse scale on the desktop texture overlay for the UI to read the resolution from there
     vr::HmdVector2_t mouse_scale = {0};
-    mouse_scale.v[0] = m_DesktopWidth;
-    mouse_scale.v[1] = m_DesktopHeight;
+    mouse_scale.v[0] = m_DDPDesktopWidth;
+    mouse_scale.v[1] = m_DDPDesktopHeight;
     vr::VROverlay()->SetOverlayMouseScale(m_OvrlHandleDesktopTexture, &mouse_scale);
 
     //Create shared texture for all duplication threads to draw into
     D3D11_TEXTURE2D_DESC TexD;
     RtlZeroMemory(&TexD, sizeof(D3D11_TEXTURE2D_DESC));
-    TexD.Width            = m_DesktopWidth;
-    TexD.Height           = m_DesktopHeight;
+    TexD.Width            = m_DDPDesktopWidth;
+    TexD.Height           = m_DDPDesktopHeight;
     TexD.MipLevels        = 1;
     TexD.ArraySize        = 1;
     TexD.Format           = ((m_OutputHDRAvailable) && (ConfigManager::GetValue(configid_bool_performance_hdr_mirroring))) ? DXGI_FORMAT_R16G16B16A16_FLOAT : DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -4019,8 +4019,8 @@ DDPDuplReturn OutputManager::DrawMouseToOverlayTex(DDPPtrInfo& PtrInfo)
     };
 
     // Center of desktop dimensions
-    FLOAT CenterX = (m_DesktopWidth  / 2.0f);
-    FLOAT CenterY = (m_DesktopHeight / 2.0f);
+    FLOAT CenterX = (m_DDPDesktopWidth  / 2.0f);
+    FLOAT CenterY = (m_DDPDesktopHeight / 2.0f);
 
     // Clipping adjusted coordinates / dimensions
     INT PtrWidth  = 0;
@@ -4214,7 +4214,7 @@ DDPDuplReturnUpdate OutputManager::RefreshOpenVROverlayTexture(DPRect& DirtyRect
             {
                 //Another thread has the keyed mutex so there will be a new frame ready after this.
                 //Bail out and just set the pending dirty region to full so everything gets drawn over on the next update
-                m_OutputPendingDirtyRect = {0, 0, m_DesktopWidth, m_DesktopHeight};
+                m_OutputPendingDirtyRect = {0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight};
                 return ddp_dupl_return_update_retry;
             }
             else if (FAILED(hr))
@@ -4265,7 +4265,7 @@ DDPDuplReturnUpdate OutputManager::RefreshOpenVROverlayTexture(DPRect& DirtyRect
                 return (DDPDuplReturnUpdate)ProcessFailure(m_MultiGPUTargetDevice.Get(), L"Failed to map copy-target texture", L"Desktop+ Error", hr, SystemTransitionsExpectedErrors);
             }
 
-            memcpy(mapped_resource_target.pData, mapped_resource_staging.pData, m_DesktopHeight * mapped_resource_staging.RowPitch);
+            memcpy(mapped_resource_target.pData, mapped_resource_staging.pData, m_DDPDesktopHeight * mapped_resource_staging.RowPitch);
 
             m_DeviceContext->Unmap(m_MultiGPUTexStaging.Get(), 0);
             m_MultiGPUTargetDeviceContext->Unmap(m_MultiGPUTexTarget.Get(), 0);
@@ -4274,7 +4274,7 @@ DDPDuplReturnUpdate OutputManager::RefreshOpenVROverlayTexture(DPRect& DirtyRect
         }
 
         //Do a simple full copy (done below) if the rect covers the whole texture (this isn't slower than a full rect copy and works with size changes)
-        force_full_copy = ( (force_full_copy) || (DirtyRectTotal.Contains({0, 0, m_DesktopWidth, m_DesktopHeight})) );
+        force_full_copy = ( (force_full_copy) || (DirtyRectTotal.Contains({0, 0, m_DDPDesktopWidth, m_DDPDesktopHeight})) );
 
         if (!force_full_copy) //Otherwise do a partial copy
         {
@@ -4312,7 +4312,7 @@ DDPDuplReturnUpdate OutputManager::RefreshOpenVROverlayTexture(DPRect& DirtyRect
         if (force_full_copy) //This is down here so a failed partial copy is picked up as well
         {
             bool refresh_shared_texture = false;
-            vr::VROverlayEx()->SetOverlayTextureEx(m_OvrlHandleDesktopTexture, &vrtex, {m_DesktopWidth, m_DesktopHeight}, &refresh_shared_texture);
+            vr::VROverlayEx()->SetOverlayTextureEx(m_OvrlHandleDesktopTexture, &vrtex, {m_DDPDesktopWidth, m_DDPDesktopHeight}, &refresh_shared_texture);
 
             //Apply potential texture change to all overlays and notify them of duplication update
             for (unsigned int i = 0; i < OverlayManager::Get().GetOverlayCount(); ++i)
@@ -4383,7 +4383,7 @@ bool OutputManager::DesktopTextureAlphaCheck()
         return false;
 
     //Sanity check texture dimensions
-    if ( ((UINT)m_DesktopWidth != m_OvrlTexDesc.Width) || ((UINT)m_DesktopHeight != m_OvrlTexDesc.Height) )
+    if ( ((UINT)m_DDPDesktopWidth != m_OvrlTexDesc.Width) || ((UINT)m_DDPDesktopHeight != m_OvrlTexDesc.Height) )
         return false;
 
     //Read one pixel for each desktop
@@ -4418,10 +4418,10 @@ bool OutputManager::DesktopTextureAlphaCheck()
     UINT dst_x = 0;
     for (const DPRect& rect : m_DesktopRects)
     {
-        box.left   = clamp(rect.GetTL().x - m_DesktopX, 0, m_DesktopWidth - 1);
-        box.right  = clamp(box.left + 1, 1u, (UINT)m_DesktopWidth);
-        box.top    = clamp(rect.GetTL().y - m_DesktopY, 0, m_DesktopHeight - 1);
-        box.bottom = clamp(box.top + 1, 1u, (UINT)m_DesktopHeight);
+        box.left   = clamp(rect.GetTL().x - m_DDPDesktopX, 0, m_DDPDesktopWidth - 1);
+        box.right  = clamp(box.left + 1, 1u, (UINT)m_DDPDesktopWidth);
+        box.top    = clamp(rect.GetTL().y - m_DDPDesktopY, 0, m_DDPDesktopHeight - 1);
+        box.bottom = clamp(box.top + 1, 1u, (UINT)m_DDPDesktopHeight);
 
         m_DeviceContext->CopySubresourceRegion(tex_staging.Get(), 0, dst_x, 0, 0, GetOverlayTexture(), 0, &box);
         dst_x++;
@@ -5125,9 +5125,9 @@ void OutputManager::OnOpenVRMouseEvent(const vr::VREvent_t& vr_event, unsigned i
             }
             else if (data.ConfigInt[configid_int_overlay_capture_source] == ovrl_capsource_desktop_duplication)
             {
-                content_height = m_DesktopHeight;
-                offset_x = m_DesktopX;
-                offset_y = m_DesktopY;
+                content_height = m_DDPDesktopHeight;
+                offset_x = m_DDPDesktopX;
+                offset_y = m_DDPDesktopY;
             }
 
             //SteamVR ignores 3D properties when adjusting coordinates for custom UV values, so we need to add offsets manually
@@ -6692,8 +6692,8 @@ void OutputManager::ApplySettingMouseInput()
             {
                 vr::VROverlayIntersectionMaskPrimitive_t primitive = {};
                 primitive.m_nPrimitiveType = vr::OverlayIntersectionPrimitiveType_Rectangle;
-                primitive.m_Primitive.m_Rectangle.m_flTopLeftX = rect.GetTL().x - m_DesktopX;
-                primitive.m_Primitive.m_Rectangle.m_flTopLeftY = rect.GetTL().y - m_DesktopY;
+                primitive.m_Primitive.m_Rectangle.m_flTopLeftX = rect.GetTL().x - m_DDPDesktopX;
+                primitive.m_Primitive.m_Rectangle.m_flTopLeftY = rect.GetTL().y - m_DDPDesktopY;
                 primitive.m_Primitive.m_Rectangle.m_flWidth    = rect.GetWidth();
                 primitive.m_Primitive.m_Rectangle.m_flHeight   = rect.GetHeight();
 
@@ -6747,8 +6747,8 @@ void OutputManager::ApplySettingMouseScale()
         {
             case ovrl_capsource_desktop_duplication:
             {
-                mouse_scale.v[0] = m_DesktopWidth;
-                mouse_scale.v[1] = m_DesktopHeight;
+                mouse_scale.v[0] = m_DDPDesktopWidth;
+                mouse_scale.v[1] = m_DDPDesktopHeight;
                 break;
             }
             case ovrl_capsource_winrt_capture:

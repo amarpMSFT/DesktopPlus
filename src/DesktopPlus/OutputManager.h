@@ -59,10 +59,10 @@ class OutputManager
         bool GetOverlayInputActive() const;
         DWORD GetMaxRefreshDelay() const;
         float GetHMDFrameRate() const;
-        int GetDesktopWidth() const;
-        int GetDesktopHeight() const;
-        int GetDesktopX() const;
-        int GetDesktopY() const;
+        int GetDDPDesktopX() const;
+        int GetDDPDesktopY() const;
+        int GetDDPDesktopWidth() const;
+        int GetDDPDesktopHeight() const;
         const std::vector<DPRect>& GetDesktopRects() const;
         float GetDesktopHDRWhiteLevelAdjustment(int desktop_id, bool is_for_graphics_capture, bool wmr_ignore_vscreens) const;
 
@@ -198,10 +198,10 @@ class OutputManager
         HANDLE m_PauseDuplicationEvent;
         HANDLE m_ResumeDuplicationEvent;
 
-        int m_DesktopX;                         //These are the desktop coordinates/size valid for Desktop Duplication and may be different from the m_DesktopRectTotal
-        int m_DesktopY;
-        int m_DesktopWidth;
-        int m_DesktopHeight;
+        int m_DDPDesktopX;                      //These are the desktop coordinates/size valid for Desktop Duplication and may be different from the m_DesktopRectTotal
+        int m_DDPDesktopY;
+        int m_DDPDesktopWidth;
+        int m_DDPDesktopHeight;
         std::vector<DPRect> m_DesktopRects;     //Cached position and size of available desktops
         DPRect m_DesktopRectTotal;              //Total rect of all available desktops (may not be the same as above Desktop Duplication rect if that's not using the combined desktop)
         std::vector<float> m_DesktopHDRWhiteLevelAdjustments; //Cached GetDesktopHDRWhiteLevelAdjustment() results used during cursor updates

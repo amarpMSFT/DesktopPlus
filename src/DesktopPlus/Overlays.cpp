@@ -126,8 +126,8 @@ void Overlay::AssignDesktopDuplicationTexture()
             return;
 
         //Set content size to desktop duplication values
-        int dwidth  = outmgr->GetDesktopWidth();
-        int dheight = outmgr->GetDesktopHeight();
+        int dwidth  = outmgr->GetDDPDesktopWidth();
+        int dheight = outmgr->GetDDPDesktopHeight();
 
         //Avoid sending it over to UI if we can help it
         if ( (data.ConfigInt[configid_int_overlay_state_content_width] != dwidth) || (data.ConfigInt[configid_int_overlay_state_content_height] != dheight) )
