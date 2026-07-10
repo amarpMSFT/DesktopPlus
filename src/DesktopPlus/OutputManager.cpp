@@ -7377,7 +7377,10 @@ bool OutputManager::DetachedTransformFrameUpdate()
     {
         DetachedTransformFrameUpdateApplySmoothingParameters(overlay, data.ConfigInt[configid_int_overlay_origin_smoothing_level]);
         matrix.setTranslation( overlay.GetSmootherPos().Filter(matrix.getTranslation()) );
-        matrix.setRotation(    overlay.GetSmootherRot().FilterWrapped(matrix.getRotation(), 0.0f, 360.0f) );
+        const float deadzone_vertical   = data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_vertical];
+        const float deadzone_horizontal = data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_horizontal];
+        matrix.setRotation(overlay.GetSmootherRot().FilterWrapped(matrix.getRotation(), 0.0f, 360.0f,
+                           Vector3(deadzone_vertical, deadzone_horizontal, deadzone_vertical)));
     }
 
     vr::HmdMatrix34_t matrix_ovr = matrix.toOpenVR34();
@@ -7487,7 +7490,7 @@ void OutputManager::DetachedTransformFrameUpdateApplySmoothingParameters(Overlay
         }
     }
 
-    smoother_rot.SetInnerRadius(ConfigManager::GetValue(configid_float_overlay_origin_smoothing_deadzone));
+    smoother_rot.SetInnerRadius(0.0);
 }
 
 void OutputManager::DetachedTransformUpdateSeatedPosition()
