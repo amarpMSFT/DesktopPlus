@@ -16,7 +16,7 @@ double RadialFollowCore::GetOuterRadius()
 
 void RadialFollowCore::SetOuterRadius(double value)
 {
-    m_RadiusOuter = clamp(m_RadiusOuter, 0.0, 1000000.0);
+    m_RadiusOuter = clamp(value, 0.0, 1000000.0);
 }
 
 double RadialFollowCore::GetInnerRadius()

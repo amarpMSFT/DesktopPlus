@@ -1110,6 +1110,12 @@ void UIManager::OnInitDone()
 
     UpdateDesktopOverlayPixelSize();
     ConfigManager::Get().GetAppProfileManager().ActivateProfileForCurrentSceneApp();
+
+    if ((!m_DesktopMode) && (OverlayManager::Get().GetOverlayCount() != 0))
+    {
+        m_VRKeyboard.GetWindow().SetAssignedOverlayID((int)OverlayManager::Get().GetCurrentOverlayID());
+        m_VRKeyboard.GetWindow().Show(true);
+    }
 }
 
 void UIManager::OnExit()

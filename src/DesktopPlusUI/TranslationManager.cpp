@@ -328,6 +328,8 @@ const char* TranslationManager::s_StringIDNames[tstr_MAX] =
     "tstr_KeyboardWindowTitleSettings",
     "tstr_KeyboardWindowTitleOverlay",
     "tstr_KeyboardWindowTitleOverlayUnknown",
+    "tstr_KeyboardOriginDeadzone",
+    "tstr_KeyboardRecenter",
     "tstr_KeyboardShortcutsCut",
     "tstr_KeyboardShortcutsCopy",
     "tstr_KeyboardShortcutsPaste",

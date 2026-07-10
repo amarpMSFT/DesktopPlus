@@ -7161,6 +7161,10 @@ void OutputManager::DetachedTransformReset(unsigned int overlay_id_ref)
     //Sync reset with UI app
     DetachedTransformSync(OverlayManager::Get().GetCurrentOverlayID());
 
+    Overlay& overlay = OverlayManager::Get().GetCurrentOverlay();
+    overlay.GetSmootherPos().ResetLastPos();
+    overlay.GetSmootherRot().ResetLastPos();
+
     ApplySettingTransform();
 }
 
@@ -7482,6 +7486,8 @@ void OutputManager::DetachedTransformFrameUpdateApplySmoothingParameters(Overlay
             break;
         }
     }
+
+    smoother_rot.SetInnerRadius(ConfigManager::GetValue(configid_float_overlay_origin_smoothing_deadzone));
 }
 
 void OutputManager::DetachedTransformUpdateSeatedPosition()

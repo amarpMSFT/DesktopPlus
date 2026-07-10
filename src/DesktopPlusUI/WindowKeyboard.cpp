@@ -340,6 +340,41 @@ void WindowKeyboard::WindowUpdate()
     io.KeyRepeatDelay = 0.5f;
     io.KeyRepeatRate  = 0.025f;
 
+    const int assigned_overlay_id = GetAssignedOverlayID();
+    if ((assigned_overlay_id >= 0) && ((unsigned int)assigned_overlay_id < OverlayManager::Get().GetOverlayCount()))
+    {
+        OverlayConfigData& data = OverlayManager::Get().GetConfigData((unsigned int)assigned_overlay_id);
+        const int origin = data.ConfigInt[configid_int_overlay_origin];
+        const bool is_headset_follow = (origin == ovrl_origin_hmd) ||
+                                       ((origin == ovrl_origin_hmd_floor) && data.ConfigBool[configid_bool_overlay_origin_hmd_floor_use_turning]);
+
+        if (is_headset_follow)
+        {
+            float& deadzone = data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone];
+
+            ImGui::TextUnformatted(TranslationManager::GetString(tstr_KeyboardOriginDeadzone));
+            ImGui::SameLine();
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f);
+            if (ImGui::SliderWithButtonsFloat("HeadsetFollowDeadzone", deadzone, 1.0f, 0.25f, 0.0f, 45.0f, "%.1f deg", 0))
+            {
+                deadzone = clamp(deadzone, 0.0f, 45.0f);
+                IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, assigned_overlay_id);
+                IPCManager::Get().PostConfigMessageToDashboardApp(configid_float_overlay_origin_smoothing_deadzone, deadzone);
+                IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, -1);
+            }
+            ImGui::PopItemWidth();
+
+            if (ImGui::Button(TranslationManager::GetString(tstr_KeyboardRecenter)))
+            {
+                IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, assigned_overlay_id);
+                IPCManager::Get().PostMessageToDashboardApp(ipcmsg_action, ipcact_overlay_position_reset);
+                IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, -1);
+            }
+
+            ImGui::Separator();
+        }
+    }
+
     //Exclude title bar buttons from hovered state to get regular widget focus behavior on them
     const bool is_hovering_titlebar_buttons = ((ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenBlockedByPopup)) && 
                                                (io.MousePos.y < ImGui::GetCursorScreenPos().y - style.WindowPadding.y) && (!m_IsTitleBarHovered));
