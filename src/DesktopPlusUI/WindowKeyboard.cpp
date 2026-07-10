@@ -350,19 +350,31 @@ void WindowKeyboard::WindowUpdate()
 
         if (is_headset_follow)
         {
-            float& deadzone = data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone];
-
             ImGui::TextUnformatted(TranslationManager::GetString(tstr_KeyboardOriginDeadzone));
-            ImGui::SameLine();
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f);
-            if (ImGui::SliderWithButtonsFloat("HeadsetFollowDeadzone", deadzone, 1.0f, 0.25f, 0.0f, 45.0f, "%.1f deg", 0))
+            ImGui::Indent();
+
+            auto deadzone_slider = [&](const char* label, const char* id, ConfigID_Float config_id, float value_max)
             {
-                deadzone = clamp(deadzone, 0.0f, 45.0f);
-                IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, assigned_overlay_id);
-                IPCManager::Get().PostConfigMessageToDashboardApp(configid_float_overlay_origin_smoothing_deadzone, deadzone);
-                IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, -1);
-            }
-            ImGui::PopItemWidth();
+                float& deadzone = data.ConfigFloat[config_id];
+
+                ImGui::TextUnformatted(label);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.65f);
+                if (ImGui::SliderWithButtonsFloat(id, deadzone, 1.0f, 0.25f, 0.0f, value_max, "%.1f deg", 0))
+                {
+                    deadzone = clamp(deadzone, 0.0f, value_max);
+                    IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, assigned_overlay_id);
+                    IPCManager::Get().PostConfigMessageToDashboardApp(config_id, deadzone);
+                    IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_state_overlay_current_id_override, -1);
+                }
+                ImGui::PopItemWidth();
+            };
+
+            deadzone_slider(TranslationManager::GetString(tstr_KeyboardOriginDeadzoneHorizontal), "HeadsetFollowDeadzoneHorizontal",
+                            configid_float_overlay_origin_smoothing_deadzone_horizontal, 90.0f);
+            deadzone_slider(TranslationManager::GetString(tstr_KeyboardOriginDeadzoneVertical), "HeadsetFollowDeadzoneVertical",
+                            configid_float_overlay_origin_smoothing_deadzone_vertical, 45.0f);
+            ImGui::Unindent();
 
             if (ImGui::Button(TranslationManager::GetString(tstr_KeyboardRecenter)))
             {

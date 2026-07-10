@@ -327,6 +327,8 @@ enum TRMGRStrID
     tstr_KeyboardWindowTitleOverlay,                      //%OVERLAYNAME% == input target overlay name
     tstr_KeyboardWindowTitleOverlayUnknown,
     tstr_KeyboardOriginDeadzone,
+    tstr_KeyboardOriginDeadzoneHorizontal,
+    tstr_KeyboardOriginDeadzoneVertical,
     tstr_KeyboardRecenter,
     tstr_KeyboardShortcutsCut,
     tstr_KeyboardShortcutsCopy,
