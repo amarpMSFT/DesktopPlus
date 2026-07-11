@@ -171,6 +171,17 @@ Vector3 RadialFollowCore::Filter(const Vector3& target)
     return m_LastPos3;
 }
 
+Vector3 RadialFollowCore::Hold(const Vector3& target)
+{
+    //Initialize after a reset, but otherwise retain the previous physical position.
+    if ( !((std::isfinite(m_LastPos3.x)) && (std::isfinite(m_LastPos3.y)) && (std::isfinite(m_LastPos3.z))) || ((m_DetectInterruptions) && (::GetTickCount64() > m_LastTick + 50)) )
+        m_LastPos3 = target;
+
+    m_LastTick = ::GetTickCount64();
+
+    return m_LastPos3;
+}
+
 Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, float value_max)
 {
     return FilterWrapped(target, value_min, value_max, Vector3((float)m_RadiusInner, (float)m_RadiusInner, (float)m_RadiusInner));
