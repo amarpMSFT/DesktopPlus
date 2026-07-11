@@ -7380,7 +7380,7 @@ bool OutputManager::DetachedTransformFrameUpdate()
         const float deadzone_vertical   = data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_vertical];
         const float deadzone_horizontal = data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_horizontal];
         matrix.setRotation(overlay.GetSmootherRot().FilterWrapped(matrix.getRotation(), 0.0f, 360.0f,
-                           Vector3(deadzone_vertical, deadzone_horizontal, 0.0f)));
+                           Vector3(deadzone_vertical, deadzone_horizontal, 0.0f), true));
     }
 
     vr::HmdMatrix34_t matrix_ovr = matrix.toOpenVR34();
