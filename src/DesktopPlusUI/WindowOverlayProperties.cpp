@@ -592,12 +592,52 @@ void WindowOverlayProperties::UpdatePageMainCatPosition()
     int& origin_smoothing_level = ConfigManager::Get().GetRef(configid_int_overlay_origin_smoothing_level);
     const int origin_smoothing_level_max = tstr_SettingsMouseSmoothingLevelVeryHigh - tstr_SettingsMouseSmoothingLevelNone;
     origin_smoothing_level = clamp(origin_smoothing_level, 0, origin_smoothing_level_max);
+
+    auto headset_follow_settings = [&](const char* id_suffix)
+    {
+        ImGui::NextColumn();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(TranslationManager::GetString(tstr_KeyboardOriginDeadzone));
+        ImGui::NextColumn();
+
+        float& deadzone_horizontal = ConfigManager::Get().GetRef(configid_float_overlay_origin_smoothing_deadzone_horizontal);
+        float& deadzone_vertical   = ConfigManager::Get().GetRef(configid_float_overlay_origin_smoothing_deadzone_vertical);
+
+        ImGui::PushID(id_suffix);
+        ImGui::TextUnformatted(TranslationManager::GetString(tstr_KeyboardOriginDeadzoneHorizontal));
+        ImGui::SameLine();
+        if (ImGui::SliderWithButtonsFloat("DeadzoneHorizontal", deadzone_horizontal, 1.0f, 0.25f, 0.0f, 90.0f, "%.1f deg", 0))
+        {
+            deadzone_horizontal = clamp(deadzone_horizontal, 0.0f, 90.0f);
+            IPCManager::Get().PostConfigMessageToDashboardApp(configid_float_overlay_origin_smoothing_deadzone_horizontal, deadzone_horizontal);
+        }
+
+        ImGui::TextUnformatted(TranslationManager::GetString(tstr_KeyboardOriginDeadzoneVertical));
+        ImGui::SameLine();
+        if (ImGui::SliderWithButtonsFloat("DeadzoneVertical", deadzone_vertical, 1.0f, 0.25f, 0.0f, 45.0f, "%.1f deg", 0))
+        {
+            deadzone_vertical = clamp(deadzone_vertical, 0.0f, 45.0f);
+            IPCManager::Get().PostConfigMessageToDashboardApp(configid_float_overlay_origin_smoothing_deadzone_vertical, deadzone_vertical);
+        }
+
+        if (ImGui::Button(TranslationManager::GetString(tstr_KeyboardRecenter)))
+        {
+            OverlayPositionReset();
+        }
+        ImGui::PopID();
+    };
+
     if (ImGui::SliderWithButtonsInt("SmoothingLevelHMDFloor", origin_smoothing_level, 1, 1, 0, origin_smoothing_level_max, "##%d", ImGuiSliderFlags_NoInput, nullptr, 
                                     TranslationManager::GetString( (TRMGRStrID)(tstr_SettingsMouseSmoothingLevelNone + origin_smoothing_level) )))
     {
         origin_smoothing_level = clamp(origin_smoothing_level, 0, origin_smoothing_level_max);
 
         IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_overlay_origin_smoothing_level, origin_smoothing_level);
+    }
+
+    if (use_turning)
+    {
+        headset_follow_settings("HMDFloor");
     }
 
     ImGui::Columns(1);
@@ -622,6 +662,8 @@ void WindowOverlayProperties::UpdatePageMainCatPosition()
 
         IPCManager::Get().PostConfigMessageToDashboardApp(configid_int_overlay_origin_smoothing_level, origin_smoothing_level);
     }
+
+    headset_follow_settings("HMD");
 
     ImGui::Columns(1);
 
