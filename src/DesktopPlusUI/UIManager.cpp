@@ -1113,8 +1113,8 @@ void UIManager::OnInitDone()
 
     if ((!m_DesktopMode) && (OverlayManager::Get().GetOverlayCount() != 0))
     {
-        m_VRKeyboard.GetWindow().SetAssignedOverlayID((int)OverlayManager::Get().GetCurrentOverlayID());
-        m_VRKeyboard.GetWindow().Show(true);
+        m_WindowOverlayProperties.SetActiveOverlayID(OverlayManager::Get().GetCurrentOverlayID(), true);
+        m_WindowOverlayProperties.Show(true);
     }
 }
 
