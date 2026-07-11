@@ -7382,8 +7382,9 @@ bool OutputManager::DetachedTransformFrameUpdate()
         matrix.setRotation(overlay.GetSmootherRot().FilterWrapped(matrix.getRotation(), 0.0f, 360.0f,
                            Vector3(deadzone_vertical, deadzone_horizontal, 0.0f), true, &is_within_deadzone));
 
-        if (!is_within_deadzone)
-            matrix.setTranslation(overlay.GetSmootherPos().Filter(matrix.getTranslation()));
+        matrix.setTranslation(is_within_deadzone
+            ? overlay.GetSmootherPos().Hold(matrix.getTranslation())
+            : overlay.GetSmootherPos().Filter(matrix.getTranslation()));
     }
 
     vr::HmdMatrix34_t matrix_ovr = matrix.toOpenVR34();

@@ -36,6 +36,7 @@ class RadialFollowCore
 
         Vector2 Filter(const Vector2& target);
         Vector3 Filter(const Vector3& target);
+        Vector3 Hold(const Vector3& target);
         Vector3 FilterWrapped(const Vector3& target, float value_min, float value_max);	//Treats changes like max to min as small steps, but doesn't wrap the return value
         Vector3 FilterWrapped(const Vector3& target, float value_min, float value_max, const Vector3& inner_radii, bool release_all_controls = false, bool* is_within_deadzone = nullptr);
 
