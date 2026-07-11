@@ -176,7 +176,7 @@ Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, 
     return FilterWrapped(target, value_min, value_max, Vector3((float)m_RadiusInner, (float)m_RadiusInner, (float)m_RadiusInner));
 }
 
-Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, float value_max, const Vector3& inner_radii, bool release_all_controls)
+Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, float value_max, const Vector3& inner_radii, bool release_all_controls, bool* is_within_deadzone)
 {
     auto unwrap_to_nearest = [&](const float value_wrapped, const float value_prev)
     {
@@ -198,7 +198,12 @@ Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, 
     const float dist = direction.length();
     double radius_inner = 0.0;
 
-    if (release_all_controls && (std::abs(direction.x) <= inner_radii.x) && (std::abs(direction.y) <= inner_radii.y))
+    const bool within_deadzone = release_all_controls && (std::abs(direction.x) <= inner_radii.x) && (std::abs(direction.y) <= inner_radii.y);
+
+    if (is_within_deadzone != nullptr)
+        *is_within_deadzone = within_deadzone;
+
+    if (within_deadzone)
     {
         //Keep all rotation controls stationary until pitch or yaw leaves its configured dead zone.
         if ( !((std::isfinite(m_LastPos3.x)) && (std::isfinite(m_LastPos3.y)) && (std::isfinite(m_LastPos3.z))) || ((m_DetectInterruptions) && (::GetTickCount64() > m_LastTick + 50)) )
@@ -207,6 +212,7 @@ Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, 
         m_LastTick = ::GetTickCount64();
         return m_LastPos3;
     }
+
     else if (release_all_controls)
     {
         radius_inner = m_RadiusInner;
