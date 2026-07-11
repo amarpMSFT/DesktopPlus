@@ -16,7 +16,7 @@ double RadialFollowCore::GetOuterRadius()
 
 void RadialFollowCore::SetOuterRadius(double value)
 {
-    m_RadiusOuter = clamp(m_RadiusOuter, 0.0, 1000000.0);
+    m_RadiusOuter = clamp(value, 0.0, 1000000.0);
 }
 
 double RadialFollowCore::GetInnerRadius()
@@ -136,7 +136,7 @@ void RadialFollowCore::ApplyPresetSettings(int preset_id)
 
 float RadialFollowCore::SampleRadialCurve(float dist)
 {
-    return (float)DeltaFn(dist, m_XOffset, m_ScaleComp);
+    return (float)DeltaFn(dist, m_XOffset, m_ScaleComp, m_RadiusInner);
 }
 
 Vector2 RadialFollowCore::Filter(const Vector2& target)
@@ -173,6 +173,11 @@ Vector3 RadialFollowCore::Filter(const Vector3& target)
 
 Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, float value_max)
 {
+    return FilterWrapped(target, value_min, value_max, Vector3((float)m_RadiusInner, (float)m_RadiusInner, (float)m_RadiusInner));
+}
+
+Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, float value_max, const Vector3& inner_radii)
+{
     auto unwrap_to_nearest = [&](const float value_wrapped, const float value_prev)
     {
         //Unwrap value in a way that ensures close to the previous one
@@ -190,7 +195,34 @@ Vector3 RadialFollowCore::FilterWrapped(const Vector3& target, float value_min, 
     target_unwrapped.z = unwrap_to_nearest(target.z, m_LastPos3.z);
 
     Vector3 direction = target_unwrapped - m_LastPos3;
-    float distToMove = SampleRadialCurve(direction.length());
+    const float dist = direction.length();
+    double radius_inner = 0.0;
+
+    if (dist > 0.0f)
+    {
+        const Vector3 direction_normalized = direction * (1.0f / dist);
+        double inverse_radius_squared = 0.0;
+
+        const auto add_axis = [&](float direction_axis, float radius_axis)
+        {
+            if (std::abs(direction_axis) > 0.000001f)
+            {
+                if (radius_axis <= 0.0f)
+                    inverse_radius_squared = INFINITY;
+                else
+                    inverse_radius_squared += (direction_axis * direction_axis) / (radius_axis * radius_axis);
+            }
+        };
+
+        add_axis(direction_normalized.x, inner_radii.x);
+        add_axis(direction_normalized.y, inner_radii.y);
+        add_axis(direction_normalized.z, inner_radii.z);
+
+        if ((inverse_radius_squared > 0.0) && (std::isfinite(inverse_radius_squared)))
+            radius_inner = 1.0 / std::sqrt(inverse_radius_squared);
+    }
+
+    float distToMove = (float)DeltaFn(dist, m_XOffset, m_ScaleComp, radius_inner);
     direction.normalize();
     m_LastPos3 = m_LastPos3 + (direction * distToMove);
 
@@ -269,14 +301,14 @@ double RadialFollowCore::GetScaleComp()
     return DeriveKneeScaled(GetXOffset());
 }
 
-double RadialFollowCore::GetRadiusOuterAdjusted()
+double RadialFollowCore::GetRadiusOuterAdjusted(double radius_inner)
 {
-    return m_GridScale * std::max(m_RadiusOuter, m_RadiusInner + 0.0001);
+    return m_GridScale * std::max(m_RadiusOuter, radius_inner + 0.0001);
 }
 
-double RadialFollowCore::GetRadiusInnerAdjusted()
+double RadialFollowCore::GetRadiusInnerAdjusted(double radius_inner)
 {
-    return m_GridScale * m_RadiusInner;
+    return m_GridScale * radius_inner;
 }
 
 double RadialFollowCore::LeakedFn(double x, double offset, double scaleComp)
@@ -289,12 +321,14 @@ double RadialFollowCore::SmoothedFn(double x, double offset, double scaleComp)
     return LeakedFn(x * m_SmoothingCoef / scaleComp, offset, scaleComp);
 }
 
-double RadialFollowCore::ScaleToOuter(double x, double offset, double scaleComp)
+double RadialFollowCore::ScaleToOuter(double x, double offset, double scaleComp, double radius_inner)
 {
-    return (GetRadiusOuterAdjusted() - GetRadiusInnerAdjusted()) * SmoothedFn(x / (GetRadiusOuterAdjusted() - GetRadiusInnerAdjusted()), offset, scaleComp);
+    return (GetRadiusOuterAdjusted(radius_inner) - GetRadiusInnerAdjusted(radius_inner)) *
+           SmoothedFn(x / (GetRadiusOuterAdjusted(radius_inner) - GetRadiusInnerAdjusted(radius_inner)), offset, scaleComp);
 }
 
-double RadialFollowCore::DeltaFn(double x, double offset, double scaleComp)
+double RadialFollowCore::DeltaFn(double x, double offset, double scaleComp, double radius_inner)
 {
-    return (x > GetRadiusInnerAdjusted()) ? x - ScaleToOuter(x - GetRadiusInnerAdjusted(), offset, scaleComp) - GetRadiusInnerAdjusted() : 0.0;
+    return (x > GetRadiusInnerAdjusted(radius_inner)) ?
+           x - ScaleToOuter(x - GetRadiusInnerAdjusted(radius_inner), offset, scaleComp, radius_inner) - GetRadiusInnerAdjusted(radius_inner) : 0.0;
 }

@@ -196,6 +196,9 @@ void ConfigManager::LoadOverlayProfile(const Ini& config, unsigned int overlay_i
     data.ConfigInt[configid_int_overlay_origin]                         = GetOverlayOriginFromConfigString(config.ReadString(section.c_str(), "Origin", "Room"));
     data.ConfigBool[configid_bool_overlay_origin_hmd_floor_use_turning] = config.ReadBool(section.c_str(),   "OriginHMDFloorTurning", false);
     data.ConfigInt[configid_int_overlay_origin_smoothing_level]         = config.ReadInt(section.c_str(),    "OriginSmoothingLevel", 0);
+    const int origin_smoothing_deadzone_legacy = config.ReadInt(section.c_str(), "OriginSmoothingDeadzone", 1500);
+    data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_vertical]   = clamp(config.ReadInt(section.c_str(), "OriginSmoothingDeadzoneVertical",   origin_smoothing_deadzone_legacy) / 100.0f, 0.0f, 45.0f);
+    data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_horizontal] = clamp(config.ReadInt(section.c_str(), "OriginSmoothingDeadzoneHorizontal", origin_smoothing_deadzone_legacy) / 100.0f, 0.0f, 90.0f);
     data.ConfigBool[configid_bool_overlay_transform_locked]             = config.ReadBool(section.c_str(),   "TransformLocked", false);
 
     data.ConfigBool[configid_bool_overlay_crop_enabled]                 = config.ReadBool(section.c_str(), "CroppingEnabled", false);
@@ -325,6 +328,8 @@ void ConfigManager::SaveOverlayProfile(Ini& config, unsigned int overlay_id)
     config.WriteString(section.c_str(), "Origin",                 GetConfigStringForOverlayOrigin((OverlayOrigin)data.ConfigInt[configid_int_overlay_origin]));
     config.WriteBool(section.c_str(),   "OriginHMDFloorTurning",  data.ConfigBool[configid_bool_overlay_origin_hmd_floor_use_turning]);
     config.WriteInt(section.c_str(),    "OriginSmoothingLevel",   data.ConfigInt[configid_int_overlay_origin_smoothing_level]);
+    config.WriteInt(section.c_str(), "OriginSmoothingDeadzoneVertical",   int(data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_vertical]   * 100.0f));
+    config.WriteInt(section.c_str(), "OriginSmoothingDeadzoneHorizontal", int(data.ConfigFloat[configid_float_overlay_origin_smoothing_deadzone_horizontal] * 100.0f));
     config.WriteBool(section.c_str(),   "TransformLocked",        data.ConfigBool[configid_bool_overlay_transform_locked]);
 
     config.WriteBool(section.c_str(), "CroppingEnabled",        data.ConfigBool[configid_bool_overlay_crop_enabled]);

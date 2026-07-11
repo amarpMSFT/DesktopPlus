@@ -37,6 +37,7 @@ class RadialFollowCore
         Vector2 Filter(const Vector2& target);
         Vector3 Filter(const Vector3& target);
         Vector3 FilterWrapped(const Vector3& target, float value_min, float value_max);	//Treats changes like max to min as small steps, but doesn't wrap the return value
+        Vector3 FilterWrapped(const Vector3& target, float value_min, float value_max, const Vector3& inner_radii);
 
         void ResetLastPos();
 
@@ -66,10 +67,10 @@ class RadialFollowCore
         double DeriveKneeScaled(double x);
         double GetXOffset();
         double GetScaleComp();
-        double GetRadiusOuterAdjusted();
-        double GetRadiusInnerAdjusted();
+        double GetRadiusOuterAdjusted(double radius_inner);
+        double GetRadiusInnerAdjusted(double radius_inner);
         double LeakedFn(double x, double offset, double scaleComp);
         double SmoothedFn(double x, double offset, double scaleComp);
-        double ScaleToOuter(double x, double offset, double scaleComp);
-        double DeltaFn(double x, double offset, double scaleComp);
+        double ScaleToOuter(double x, double offset, double scaleComp, double radius_inner);
+        double DeltaFn(double x, double offset, double scaleComp, double radius_inner);
 };

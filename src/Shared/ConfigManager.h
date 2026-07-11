@@ -211,6 +211,8 @@ enum ConfigID_Float
     configid_float_overlay_gazefade_rate,
     configid_float_overlay_gazefade_opacity,
     configid_float_overlay_update_limit_override_ms,
+    configid_float_overlay_origin_smoothing_deadzone_vertical,
+    configid_float_overlay_origin_smoothing_deadzone_horizontal,
     configid_float_overlay_state_brightness_extra_multiplier, //Multiplier applied on top of configid_float_overlay_brightness, currently used for HDR adjustment
     configid_float_overlay_MAX,
     configid_float_input_detached_interaction_max_distance,
