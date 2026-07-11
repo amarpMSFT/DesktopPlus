@@ -566,6 +566,16 @@ void WindowOverlayProperties::UpdatePageMainCatPosition()
     ImGui::SetCursorScreenPos(backup_pos);
     ImGui::Columns(1);
 
+    if (mode_origin != ovrl_origin_theater_screen)
+    {
+        if (ImGui::Button(TranslationManager::GetString(tstr_KeyboardRecenter)))
+        {
+            OverlayPositionReset();
+        }
+
+        ImGui::Spacing();
+    }
+
     //Origin-specific settings
     //-Origin HMD Floor
     ImGui::BeginCollapsingArea("OriginHMDFloorSettings", (mode_origin == ovrl_origin_hmd_floor), m_OriginHMDFloorSettingsAnimationProgress);
@@ -620,10 +630,6 @@ void WindowOverlayProperties::UpdatePageMainCatPosition()
             IPCManager::Get().PostConfigMessageToDashboardApp(configid_float_overlay_origin_smoothing_deadzone_vertical, deadzone_vertical);
         }
 
-        if (ImGui::Button(TranslationManager::GetString(tstr_KeyboardRecenter)))
-        {
-            OverlayPositionReset();
-        }
         ImGui::PopID();
     };
 
